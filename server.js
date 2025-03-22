@@ -1,0 +1,124 @@
+// AI Gig Worker Finance Advisor - Using Gemini API
+
+const express = require('express');
+const bodyParser = require('body-parser');
+const axios = require('axios');
+const dotenv = require('dotenv');
+
+dotenv.config();
+
+const app = express();
+app.use(bodyParser.json());
+app.use(express.static('public'));
+
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+
+const financeKeywords = [
+  'tax', 'taxes', 'deduction', 'invoice', 'income', 'expense', 'money', 'payment',
+  'salary', 'wage', 'pricing', 'rate', 'budget', 'saving', 'investment', 'stock',
+  'market', 'fund', 'retirement', 'ira', '401k', 'loan', 'debt', 'credit', 'mortgage',
+  'insurance', 'financial', 'banking', 'bank', 'invoice', 'billing', 'accounting',
+  'revenue', 'profit', 'gig economy', 'freelance', 'self-employed', 'independent contractor',
+  'quarterly', 'write-off', 'mileage', 'home office', 'schedule c', '1099', 'w9'
+];
+
+function isFinanceQuery(query) {
+  query = query.toLowerCase();
+  return financeKeywords.some(keyword => query.includes(keyword));
+}
+
+async function getFinancialData(topic) {
+  try {
+    if (topic.includes('tax')) {
+      return { federalTaxRate: "22%", stateTaxRate: "5%" };
+    } else if (topic.includes('stock') || topic.includes('market')) {
+      return { marketStatus: "Open", sampleStockPrice: "$150" };
+    } else if (topic.includes('currency') || topic.includes('exchange')) {
+      return { usdToEur: "0.85", lastUpdated: "2025-03-22" };
+    }
+    return null;
+  } catch (error) {
+    console.error('Error fetching financial data:', error);
+    return null;
+  }
+}
+
+async function generateResponse(query, financialData) {
+  try {
+    const systemPrompt = `You are an AI Finance Advisor specialized in helping gig workers, freelancers, and independent contractors with their financial questions. 
+    Focus on tax advice, expense tracking, retirement planning, and financial management specific to self-employed individuals.
+    If financial data is provided, incorporate it into your answer.
+    Only answer finance-related questions. For any other topics, respond with: "I'm sorry, I can only answer questions related to finance for gig workers. Please ask a finance-related question."`;
+
+    let userPrompt = `${systemPrompt}\n\nUser Query: ${query}`;
+    if (financialData) {
+      userPrompt += `\n\nRelevant financial data: ${JSON.stringify(financialData)}`;
+    }
+
+    const response = await axios.post(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent',
+      {
+        contents: [{
+          parts: [{
+            text: userPrompt
+          }]
+        }]
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': GEMINI_API_KEY
+        }
+      }
+    );
+
+    console.log('Gemini API Response:', JSON.stringify(response.data, null, 2));
+
+    if (!response.data.candidates || !response.data.candidates[0].content) {
+      throw new Error('Unexpected API response format');
+    }
+
+    return response.data.candidates[0].content.parts[0].text || "Sorry, I couldn't generate a response.";
+  } catch (error) {
+    console.error('Error generating response with Gemini API:', error.response?.data || error.message);
+    return "I'm having trouble generating a response right now. Please try again later.";
+  }
+}
+
+app.post('/api/chat', async (req, res) => {
+  try {
+    const { query } = req.body;
+    console.log('Received query:', query);
+
+    if (!query) {
+      return res.status(400).json({ error: 'Query is required' });
+    }
+
+    const isFinance = isFinanceQuery(query);
+    console.log('Is finance-related:', isFinance);
+    
+    if (!isFinance) {
+      return res.json({
+        response: "I'm sorry, I can only answer questions related to finance for gig workers. Please ask a finance-related question."
+      });
+    }
+
+    const financialData = await getFinancialData(query);
+    console.log('Financial data:', financialData);
+    
+    const response = await generateResponse(query, financialData);
+    console.log('Generated response:', response);
+
+    return res.json({ response });
+  } catch (error) {
+    console.error('Error processing request:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Gig Worker Finance Advisor running on port ${PORT}`);
+});
+
+module.exports = app;
