@@ -388,10 +388,10 @@
                 "What are the best investment options for gig workers?"
             ];
 
-            loadMessages();
+            // Initialize chat anew on every load
+            initializeChat();
             autoResizeTextarea();
             applyDarkModePreference();
-            animateWelcome();
 
             sendButton.addEventListener('click', debounce(sendMessage, 300));
             userInput.addEventListener('keypress', (e) => {
@@ -503,7 +503,6 @@
                 });
 
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                saveMessages();
             }
 
             function editMessage(messageDiv) {
@@ -515,13 +514,11 @@
 
             function deleteMessage(messageDiv) {
                 messageDiv.remove();
-                saveMessages();
             }
 
             function addReaction(messageDiv, reaction) {
                 const contentDiv = messageDiv.querySelector('.message-content');
                 contentDiv.textContent += ` [${reaction}]`;
-                saveMessages();
             }
 
             function showSuggestions(input) {
@@ -559,27 +556,15 @@
                 return div.innerHTML;
             }
 
-            function saveMessages() {
-                const messages = Array.from(messagesContainer.children).map(msg => ({
-                    id: msg.dataset.id,
-                    text: msg.querySelector('.message-content').textContent,
-                    sender: msg.classList.contains('user-message') ? 'user' : 'bot',
-                    timestamp: msg.querySelector('.message-timestamp').textContent
-                }));
-                localStorage.setItem('chatMessages', JSON.stringify(messages));
-            }
-
-            function loadMessages() {
-                const savedMessages = localStorage.getItem('chatMessages');
-                if (savedMessages) {
-                    const messages = JSON.parse(savedMessages);
-                    messages.forEach(msg => addMessage(msg.text, msg.sender, msg.id));
-                }
+            function initializeChat() {
+                messagesContainer.innerHTML = ''; // Clear messages on every load
+                setTimeout(() => {
+                    addMessage('Hello! I\'m your Gig Worker Finance Advisor. I can help with taxes, expenses, retirement planning, and more. What’s on your mind?', 'bot');
+                }, 500);
             }
 
             function clearChat() {
                 messagesContainer.innerHTML = '';
-                localStorage.removeItem('chatMessages');
                 addMessage('Chat cleared! How can I assist you now?', 'bot');
             }
 
@@ -598,14 +583,6 @@
                 if (localStorage.getItem('darkMode') === 'true') {
                     document.body.classList.add('dark-mode');
                     darkModeToggle.textContent = '☀️';
-                }
-            }
-
-            function animateWelcome() {
-                if (!localStorage.getItem('chatMessages')) {
-                    setTimeout(() => {
-                        addMessage('Hello! I\'m your Gig Worker Finance Advisor. I can help with taxes, expenses, retirement planning, and more. What’s on your mind?', 'bot');
-                    }, 500);
                 }
             }
 
