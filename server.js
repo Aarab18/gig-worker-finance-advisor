@@ -13,13 +13,28 @@ app.use(express.static('public'));
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
+// const financeKeywords = [
+//   'tax', 'taxes', 'deduction', 'invoice', 'income', 'expense', 'money', 'payment',
+//   'salary', 'wage', 'pricing', 'rate', 'budget', 'saving', 'investment', 'stock',
+//   'market', 'fund', 'retirement', 'ira', '401k', 'loan', 'debt', 'credit', 'mortgage',
+//   'insurance', 'financial', 'banking', 'bank', 'invoice', 'billing', 'accounting',
+//   'revenue', 'profit', 'gig economy', 'freelance', 'self-employed', 'independent contractor',
+//   'quarterly', 'write-off', 'mileage', 'home office', 'schedule c', '1099', 'w9', 'assets'
+// ];
+
 const financeKeywords = [
   'tax', 'taxes', 'deduction', 'invoice', 'income', 'expense', 'money', 'payment',
-  'salary', 'wage', 'pricing', 'rate', 'budget', 'saving', 'investment', 'stock',
-  'market', 'fund', 'retirement', 'ira', '401k', 'loan', 'debt', 'credit', 'mortgage',
-  'insurance', 'financial', 'banking', 'bank', 'invoice', 'billing', 'accounting',
-  'revenue', 'profit', 'gig economy', 'freelance', 'self-employed', 'independent contractor',
-  'quarterly', 'write-off', 'mileage', 'home office', 'schedule c', '1099', 'w9'
+  'salary', 'wage', 'pricing', 'rate', 'budget', 'saving', 'savings', 'investment', 
+  'investments', 'stock', 'stocks', 'market', 'fund', 'mutual fund', 'etf', 'portfolio',
+  'retirement', 'ira', '401k', 'roth', 'loan', 'debt', 'credit', 'mortgage',
+  'insurance', 'premium', 'financial', 'finances', 'banking', 'bank', 'interest',
+  'billing', 'accounting', 'bookkeeping', 'revenue', 'profit', 'loss', 'net worth',
+  'gig economy', 'freelance', 'self-employed', 'independent contractor',
+  'quarterly', 'write-off', 'mileage', 'home office', 'schedule c', '1099', 'w9', 
+  'assets', 'liabilities', 'balance sheet', 'cash flow', 'roi', 'return on investment',
+  'tax planning', 'wealth', 'capital gain', 'dividend', 'income tax', 'budgeting',
+  'pension', 'social security', 'financial goals', 'emergency fund', 'tax refund',
+  'credit score', 'fico', 'loan interest', 'compound interest', 'equity'
 ];
 
 function isFinanceQuery(query) {
